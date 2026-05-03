@@ -169,6 +169,60 @@ function makeArticle(title, date, href, baseUrl, sourceName, category) {
 }
 
 // ============================================================
+// 厚労省 障害福祉ページ専用スクレイパー
+// （リンクテキストに日付＋タイトルが一体で入っている構造）
+// ============================================================
+
+// ナビゲーションメニュー等の除外キーワード
+const NAV_KEYWORDS = [
+  '本文へ移動', 'ページトップ', 'メニュー', 'サイトマップ', 'アクセス',
+  '政策', '報道発表', '統計情報', '所管の法令', '申請・募集',
+  '組織情報', '調達情報', '関連リンク', 'English', 'Global Site',
+  'お問い合わせ', 'プライバシー', 'リンク', 'ホーム',
+];
+
+function isNavTitle(title) {
+  if (!title || title.length < 8) return true;
+  return NAV_KEYWORDS.some((kw) => title.trim() === kw || title.trim().startsWith(kw));
+}
+
+function extractMhlwArticles(html, baseUrl, sourceName, category) {
+  const $ = cheerioLoad(html);
+  const articles = [];
+  const seen = new Set();
+
+  $('a[href]').each((_, el) => {
+    const href = $(el).attr('href') || '';
+    const rawText = $(el).text(); // 改行を保持したまま取得
+
+    // 行ごとに分割して空行を除去
+    const lines = rawText.split(/[\n\r]/).map((s) => s.trim()).filter((s) => s.length > 0);
+    if (lines.length < 2) return; // 日付＋タイトルの2行構造が必要
+
+    // 日付を含む行を探す
+    let date = null;
+    for (const line of lines) {
+      const d = parseJapaneseDate(line);
+      if (d) { date = d; break; }
+    }
+    if (!date) return;
+    if (new Date(date) < DATE_CUTOFF) return;
+
+    // タイトルは「日付でない・8文字以上・ナビでない」行を探す
+    const title = lines.find((l) => {
+      const d = parseJapaneseDate(l);
+      return !d && l.length >= 8 && !isNavTitle(l);
+    });
+    if (!title || seen.has(title)) return;
+
+    seen.add(title);
+    articles.push(makeArticle(title, date, href, baseUrl, sourceName, category));
+  });
+
+  return articles;
+}
+
+// ============================================================
 // HTMLから記事リストを抽出する汎用関数
 // ============================================================
 function extractArticlesFromHTML(html, baseUrl, sourceName, category) {
@@ -180,7 +234,8 @@ function extractArticlesFromHTML(html, baseUrl, sourceName, category) {
     title = (title || '').trim();
     const date = parseJapaneseDate(dateText);
     if (!title || !date || seen.has(title)) return;
-    if (title.length < 5) return; // メニューリンク等を除外
+    if (title.length < 8) return; // 短すぎるタイトルを除外
+    if (isNavTitle(title)) return; // ナビゲーション項目を除外
     // 90日以上前の記事はスキップ（古いアーカイブ混入防止）
     if (new Date(date) < DATE_CUTOFF) return;
     seen.add(title);
@@ -240,32 +295,29 @@ function extractArticlesFromHTML(html, baseUrl, sourceName, category) {
 const SOURCES = [
   // ===== 第1優先：制度・通知系 =====
   {
+    name: '厚労省 障害福祉 新着',
+    url: 'https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/hukushi_kaigo/shougaishahukushi/index.html',
+    baseUrl: 'https://www.mhlw.go.jp',
+    category: '障害福祉制度・報酬・通知',
+    type: 'mhlw',
+  },
+  {
     name: '厚労省 障害福祉通知・事務連絡',
     url: 'https://www.mhlw.go.jp/seisakunitsuite/bunya/hukushi_kaigo/shougaishahukushi/kaisei/tuuchi.html',
     baseUrl: 'https://www.mhlw.go.jp',
     category: '障害福祉制度・報酬・通知',
-  },
-  {
-    name: '厚労省 障害福祉サービス等新着',
-    url: 'https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/hukushi_kaigo/shougaishahukushi/index.html',
-    baseUrl: 'https://www.mhlw.go.jp',
-    category: '障害福祉制度・報酬・通知',
+    type: 'mhlw',
   },
   {
     name: '厚労省 障害者虐待防止関係通知',
     url: 'https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/hukushi_kaigo/shougaishahukushi/gyakutaiboushi/tsuuchi.html',
     baseUrl: 'https://www.mhlw.go.jp',
     category: '障害福祉制度・報酬・通知',
+    type: 'mhlw',
   },
   {
     name: 'こども家庭庁 通知・事務連絡',
     url: 'https://www.cfa.go.jp/laws/tuuchi',
-    baseUrl: 'https://www.cfa.go.jp',
-    category: '障害福祉制度・報酬・通知',
-  },
-  {
-    name: 'こども家庭庁 新着情報',
-    url: 'https://www.cfa.go.jp/news/',
     baseUrl: 'https://www.cfa.go.jp',
     category: '障害福祉制度・報酬・通知',
   },
@@ -333,7 +385,12 @@ const SOURCES = [
 async function fetchSource(source) {
   console.log(`  取得中: ${source.name}`);
   const html = await fetchWithTimeout(source.url);
-  const articles = extractArticlesFromHTML(html, source.baseUrl, source.name, source.category);
+  let articles;
+  if (source.type === 'mhlw') {
+    articles = extractMhlwArticles(html, source.baseUrl, source.name, source.category);
+  } else {
+    articles = extractArticlesFromHTML(html, source.baseUrl, source.name, source.category);
+  }
   console.log(`  → ${articles.length}件取得`);
   return articles;
 }
