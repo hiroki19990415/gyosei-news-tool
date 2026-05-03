@@ -11,6 +11,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUTPUT_FILE = path.join(__dirname, '..', 'public', 'articles.json');
 const FETCH_TIMEOUT_MS = 15000;
 
+// 90日以上前の記事は除外する（古いアーカイブ記事が混入するのを防ぐ）
+const MAX_AGE_DAYS = 90;
+const DATE_CUTOFF = new Date();
+DATE_CUTOFF.setDate(DATE_CUTOFF.getDate() - MAX_AGE_DAYS);
+
 // ============================================================
 // 日付パーサー（和暦・西暦どちらにも対応）
 // ============================================================
@@ -176,6 +181,8 @@ function extractArticlesFromHTML(html, baseUrl, sourceName, category) {
     const date = parseJapaneseDate(dateText);
     if (!title || !date || seen.has(title)) return;
     if (title.length < 5) return; // メニューリンク等を除外
+    // 90日以上前の記事はスキップ（古いアーカイブ混入防止）
+    if (new Date(date) < DATE_CUTOFF) return;
     seen.add(title);
     articles.push(makeArticle(title, date, href, baseUrl, sourceName, category));
   }
@@ -239,6 +246,12 @@ const SOURCES = [
     category: '障害福祉制度・報酬・通知',
   },
   {
+    name: '厚労省 障害福祉サービス等新着',
+    url: 'https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/hukushi_kaigo/shougaishahukushi/index.html',
+    baseUrl: 'https://www.mhlw.go.jp',
+    category: '障害福祉制度・報酬・通知',
+  },
+  {
     name: '厚労省 障害者虐待防止関係通知',
     url: 'https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/hukushi_kaigo/shougaishahukushi/gyakutaiboushi/tsuuchi.html',
     baseUrl: 'https://www.mhlw.go.jp',
@@ -247,6 +260,18 @@ const SOURCES = [
   {
     name: 'こども家庭庁 通知・事務連絡',
     url: 'https://www.cfa.go.jp/laws/tuuchi',
+    baseUrl: 'https://www.cfa.go.jp',
+    category: '障害福祉制度・報酬・通知',
+  },
+  {
+    name: 'こども家庭庁 新着情報',
+    url: 'https://www.cfa.go.jp/news/',
+    baseUrl: 'https://www.cfa.go.jp',
+    category: '障害福祉制度・報酬・通知',
+  },
+  {
+    name: 'こども家庭庁 障害児支援',
+    url: 'https://www.cfa.go.jp/policies/shougaijishien',
     baseUrl: 'https://www.cfa.go.jp',
     category: '障害福祉制度・報酬・通知',
   },

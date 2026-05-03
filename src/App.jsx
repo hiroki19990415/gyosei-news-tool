@@ -80,7 +80,6 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <h1 className="app-title">🏛 行政・障害福祉ニュース</h1>
-        <p className="app-subtitle">奈良県障害福祉課 実務情報収集ツール</p>
 
         {dataMode === 'loading' && (
           <p className="last-fetch">読み込み中...</p>
