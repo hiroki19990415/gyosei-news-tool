@@ -1,0 +1,34 @@
+name: 行政ニュース 自動更新・公開
+
+on:
+  schedule:
+    # 毎朝8時（JST）に実行 ※GitHubはUTC管理のため -9時間 = 23:00 UTC
+    - cron: '0 23 * * *'
+  workflow_dispatch:
+    # GitHubのWebサイトから手動実行もできる
+
+jobs:
+  update-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: コードを取得
+        uses: actions/checkout@v4
+
+      - name: Node.js をセットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: ライブラリをインストール
+        run: npm ci
+
+      - name: 各サイトから情報を取得
+        run: npm run fetch
+
+      - name: Reactアプリをビルド
+        run: npm run build
+
+      - name: Surgeに公開
+        run: npx surge dist zyouhou-shougai.surge.sh --token ${{ secrets.SURGE_TOKEN }}

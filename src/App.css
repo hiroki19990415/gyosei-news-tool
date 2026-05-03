@@ -1,0 +1,356 @@
+/* ===== リセット・基本設定 ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  background: #f4f5f7;
+  color: #222;
+}
+
+/* ===== アプリ全体 ===== */
+.app {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 0 40px;
+}
+
+/* ===== ヘッダー ===== */
+.app-header {
+  background: #1a3a5c;
+  color: #fff;
+  padding: 16px;
+  text-align: center;
+}
+
+.app-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.app-subtitle {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-bottom: 8px;
+}
+
+.last-fetch {
+  font-size: 11px;
+  background: rgba(255,255,255,0.15);
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 6px;
+}
+
+.article-count {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+/* ===== メインエリア ===== */
+.app-main {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ===== セクション共通 ===== */
+.section {
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.section-important .section-title {
+  border-bottom-color: #e53e3e;
+  color: #c53030;
+}
+
+.section-latest .section-title {
+  border-bottom-color: #3182ce;
+  color: #2b6cb0;
+}
+
+.section-favorites .section-title {
+  border-bottom-color: #d69e2e;
+  color: #b7791f;
+}
+
+.section-chatgpt .section-title {
+  border-bottom-color: #38a169;
+  color: #276749;
+}
+
+.empty-msg {
+  color: #888;
+  font-size: 13px;
+  padding: 8px 0;
+}
+
+/* ===== 記事カード ===== */
+.article-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  background: #fafafa;
+}
+
+.article-card:last-child {
+  margin-bottom: 0;
+}
+
+.card-important {
+  border-left: 4px solid #e53e3e;
+  background: #fff5f5;
+}
+
+.card-normal {
+  border-left: 4px solid #3182ce;
+}
+
+/* ===== カードヘッダー ===== */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.badge-important {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.badge-normal {
+  background: #bee3f8;
+  color: #2b6cb0;
+}
+
+.badge-category {
+  background: #e2e8f0;
+  color: #4a5568;
+  font-weight: normal;
+}
+
+.fav-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: transform 0.15s;
+}
+
+.fav-btn:hover {
+  transform: scale(1.2);
+}
+
+.fav-active {
+  filter: drop-shadow(0 0 3px #d69e2e);
+}
+
+/* ===== カード本文 ===== */
+.card-title {
+  display: block;
+  font-size: 14px;
+  font-weight: bold;
+  color: #2b6cb0;
+  text-decoration: none;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.card-title:hover {
+  text-decoration: underline;
+}
+
+.card-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #718096;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.tag {
+  font-size: 11px;
+  background: #edf2f7;
+  color: #4a5568;
+  padding: 1px 7px;
+  border-radius: 20px;
+}
+
+.card-memo {
+  font-size: 12px;
+  color: #744210;
+  background: #fffbeb;
+  border: 1px solid #f6e05e;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+/* ===== ChatGPTまとめ ===== */
+.chatgpt-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  cursor: pointer;
+  gap: 4px;
+}
+
+.copy-btn {
+  background: #276749;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.copy-btn:hover {
+  background: #22543d;
+}
+
+.copy-done {
+  background: #2f855a;
+}
+
+.chatgpt-preview {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 400px;
+  overflow-y: auto;
+  color: #2d3748;
+}
+
+/* ===== 表示期間セレクター ===== */
+.period-selector {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+
+.period-btn {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.4);
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.period-btn.active {
+  background: #fff;
+  color: #1a3a5c;
+  font-weight: bold;
+}
+
+/* ===== 取得失敗サイト表示 ===== */
+.failed-sources {
+  background: #fffbeb;
+  border: 1px solid #f6e05e;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: #744210;
+}
+
+.failed-sources ul {
+  margin: 4px 0 0 16px;
+}
+
+.sample-mode {
+  background: rgba(255, 200, 0, 0.25);
+  font-size: 11px;
+}
+
+/* ===== フッター ===== */
+.app-footer {
+  text-align: center;
+  color: #a0aec0;
+  font-size: 11px;
+  padding: 16px;
+  line-height: 1.8;
+}
+
+/* ===== スマホ対応 ===== */
+@media (max-width: 480px) {
+  .app-title {
+    font-size: 17px;
+  }
+
+  .article-card {
+    padding: 10px;
+  }
+
+  .card-title {
+    font-size: 13px;
+  }
+
+  .chatgpt-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .copy-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
