@@ -14,19 +14,23 @@ const RELEVANCE_KEYWORDS = [
   '改定', '改正', '条例', '予算', '審議', '補正',
   '虐待', '処分', '指定', '行政', '自治体', 'DX',
   '奈良', '市町村', 'マイナ', 'セキュリティ',
+  // 障害福祉に関連する追加キーワード
+  '精神', '発達', '認知', '難聴', '聴覚', '視覚',
+  '養成', '介助', '要約筆記', '盲ろう', '失語',
+  '加算', '報酬', '処遇改善', '事業所', 'サービス',
 ];
 
 function isRelevant(article) {
-  // 専門系サイトは全件OK
+  // 障害福祉専門ページとして登録しているソースは全件OK
   const trustedSources = [
     '厚労省', 'こども家庭庁', '奈良県', '総務省',
-    '奈良市 福祉', '香芝市 障害', '三郷町 障がい', '大和郡山市 障害',
-    '橿原市 障がい', '天理市',
+    '奈良市 福祉', '生駒市', '香芝市', '三郷町', '大和郡山市',
+    '橿原市', '王寺町', '天理市',
   ];
   for (const s of trustedSources) {
     if (article.source.includes(s)) return true;
   }
-  // 一般サイト（王寺町・生駒市トップなど）はキーワードで判定
+  // 上記以外のソースはキーワードで判定
   const text = article.title + ' ' + article.category + ' ' + article.tags.join(' ');
   return RELEVANCE_KEYWORDS.some((kw) => text.includes(kw));
 }
@@ -53,7 +57,7 @@ export default function App() {
   const [dataMode, setDataMode] = useState('loading');
   const [fetchedAt, setFetchedAt] = useState(null);
   const [failedSources, setFailedSources] = useState([]);
-  const [displayDays, setDisplayDays] = useState(7);
+  const [displayDays, setDisplayDays] = useState('today');
 
   useEffect(() => {
     fetch('/articles.json')

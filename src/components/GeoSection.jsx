@@ -14,9 +14,9 @@ function getWelfareScore(article) {
 
 export default function GeoSection({ articles, title, icon, sectionClass, onFavoriteChange }) {
   const sorted = [...articles].sort((a, b) => {
-    const scoreDiff = getWelfareScore(b) - getWelfareScore(a);
-    if (scoreDiff !== 0) return scoreDiff;
-    return b.date > a.date ? 1 : -1;
+    // 日付が新しい順を優先、同日内は障害福祉スコア順
+    if (b.date !== a.date) return b.date > a.date ? 1 : -1;
+    return getWelfareScore(b) - getWelfareScore(a);
   });
 
   return (
