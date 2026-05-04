@@ -15,13 +15,18 @@ export default function ArticleCard({ article, onFavoriteChange }) {
     if (onFavoriteChange) onFavoriteChange();
   }
 
+  // カテゴリ→地域バッジの変換
+  const geoMap = {
+    '障害福祉制度・報酬・通知': { label: '🏛 国', cls: 'badge-national' },
+    '奈良県庁発表':             { label: '🌸 県', cls: 'badge-pref' },
+    '奈良県内自治体ニュース':   { label: '🏘 市町村', cls: 'badge-city' },
+  };
+  const geo = geoMap[article.category] || { label: '📄', cls: 'badge-normal' };
+
   return (
-    <div className={`article-card ${article.importance === '重要' ? 'card-important' : 'card-normal'}`}>
+    <div className="article-card">
       <div className="card-header">
-        <span className={`badge ${article.importance === '重要' ? 'badge-important' : 'badge-normal'}`}>
-          {article.importance === '重要' ? '🔴 重要' : '📰 通常'}
-        </span>
-        <span className="badge badge-category">{article.category}</span>
+        <span className={`badge ${geo.cls}`}>{geo.label}</span>
         <button
           className={`fav-btn ${favorited ? 'fav-active' : ''}`}
           onClick={handleFavoriteToggle}

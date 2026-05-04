@@ -2,8 +2,8 @@ name: 行政ニュース 自動更新・公開
 
 on:
   schedule:
-    # 毎朝8時（JST）に実行 ※GitHubはUTC管理のため -9時間 = 23:00 UTC
-    - cron: '0 23 * * *'
+    # 毎朝6時（JST）に実行 ※GitHubはUTC管理のため -9時間 = 21:00 UTC
+    - cron: '0 21 * * *'
   workflow_dispatch:
     # GitHubのWebサイトから手動実行もできる
 

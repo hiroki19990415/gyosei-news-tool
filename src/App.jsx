@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { sampleArticles } from './data/sampleData';
 import { getFavorites, isWithinDays } from './utils/storage';
-import ImportantSection from './components/ImportantSection';
-import LatestSection from './components/LatestSection';
+import GeoSection from './components/GeoSection';
 import FavoritesSection from './components/FavoritesSection';
 import ChatGPTSummary from './components/ChatGPTSummary';
 import './App.css';
@@ -33,10 +32,20 @@ function isRelevant(article) {
 }
 
 const PERIOD_OPTIONS = [
-  { label: '直近3日', days: 3 },
-  { label: '直近7日', days: 7 },
-  { label: '直近30日', days: 30 },
+  { label: '本日の新着', days: 'today' },
+  { label: '直近7日',   days: 7 },
 ];
+
+// 今日の日付文字列（YYYY-MM-DD）
+function getTodayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// 表示期間フィルタ
+function isInPeriod(article, period) {
+  if (period === 'today') return article.date === getTodayStr();
+  return isWithinDays(article.date, period);
+}
 
 export default function App() {
   const [allArticles, setAllArticles] = useState([]);
@@ -44,7 +53,7 @@ export default function App() {
   const [dataMode, setDataMode] = useState('loading');
   const [fetchedAt, setFetchedAt] = useState(null);
   const [failedSources, setFailedSources] = useState([]);
-  const [displayDays, setDisplayDays] = useState(30);
+  const [displayDays, setDisplayDays] = useState(7);
 
   useEffect(() => {
     fetch('/articles.json')
@@ -70,11 +79,13 @@ export default function App() {
 
   // 表示期間と関連性でフィルタリング
   const articles = allArticles
-    .filter((a) => isWithinDays(a.date, displayDays))
+    .filter((a) => isInPeriod(a, displayDays))
     .filter((a) => isRelevant(a));
 
-  const importantCount = articles.filter((a) => a.importance === '重要').length;
-  const normalCount = articles.filter((a) => a.importance === '通常').length;
+  // 地域区分ごとに分類
+  const nationalArticles = articles.filter((a) => a.category === '障害福祉制度・報酬・通知');
+  const prefArticles     = articles.filter((a) => a.category === '奈良県庁発表');
+  const cityArticles     = articles.filter((a) => a.category === '奈良県内自治体ニュース');
 
   return (
     <div className="app">
@@ -99,7 +110,7 @@ export default function App() {
         <div className="period-selector">
           {PERIOD_OPTIONS.map((opt) => (
             <button
-              key={opt.days}
+              key={String(opt.days)}
               className={`period-btn ${displayDays === opt.days ? 'active' : ''}`}
               onClick={() => setDisplayDays(opt.days)}
             >
@@ -110,7 +121,7 @@ export default function App() {
 
         <p className="article-count">
           表示中：{articles.length}件
-          （重要 {importantCount}件 / 通常 {normalCount}件）
+          （国 {nationalArticles.length}件 / 県 {prefArticles.length}件 / 市町村 {cityArticles.length}件）
         </p>
       </header>
 
@@ -126,8 +137,27 @@ export default function App() {
           </div>
         )}
 
-        <ImportantSection articles={articles} onFavoriteChange={refreshFavorites} />
-        <LatestSection articles={articles} onFavoriteChange={refreshFavorites} />
+        <GeoSection
+          articles={nationalArticles}
+          title="国（厚労省・こども家庭庁）"
+          icon="🏛"
+          sectionClass="section-national"
+          onFavoriteChange={refreshFavorites}
+        />
+        <GeoSection
+          articles={prefArticles}
+          title="奈良県"
+          icon="🌸"
+          sectionClass="section-pref"
+          onFavoriteChange={refreshFavorites}
+        />
+        <GeoSection
+          articles={cityArticles}
+          title="市町村"
+          icon="🏘"
+          sectionClass="section-city"
+          onFavoriteChange={refreshFavorites}
+        />
         <FavoritesSection favorites={favorites} onFavoriteChange={refreshFavorites} />
         <ChatGPTSummary articles={articles} />
       </main>

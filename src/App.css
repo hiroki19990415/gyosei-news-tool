@@ -76,16 +76,34 @@ body {
   margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 2px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.section-important .section-title {
-  border-bottom-color: #e53e3e;
-  color: #c53030;
+.section-count {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: normal;
+  background: #edf2f7;
+  color: #4a5568;
+  padding: 2px 10px;
+  border-radius: 20px;
 }
 
-.section-latest .section-title {
-  border-bottom-color: #3182ce;
-  color: #2b6cb0;
+.section-national .section-title {
+  border-bottom-color: #2b6cb0;
+  color: #1a365d;
+}
+
+.section-pref .section-title {
+  border-bottom-color: #d53f8c;
+  color: #97266d;
+}
+
+.section-city .section-title {
+  border-bottom-color: #38a169;
+  color: #276749;
 }
 
 .section-favorites .section-title {
@@ -117,13 +135,8 @@ body {
   margin-bottom: 0;
 }
 
-.card-important {
-  border-left: 4px solid #e53e3e;
-  background: #fff5f5;
-}
-
-.card-normal {
-  border-left: 4px solid #3182ce;
+.article-card {
+  border-left: 4px solid #cbd5e0;
 }
 
 /* ===== カードヘッダー ===== */
@@ -143,20 +156,24 @@ body {
   white-space: nowrap;
 }
 
-.badge-important {
-  background: #fed7d7;
-  color: #c53030;
+.badge-national {
+  background: #bee3f8;
+  color: #1a365d;
+}
+
+.badge-pref {
+  background: #fed7e2;
+  color: #97266d;
+}
+
+.badge-city {
+  background: #c6f6d5;
+  color: #276749;
 }
 
 .badge-normal {
-  background: #bee3f8;
-  color: #2b6cb0;
-}
-
-.badge-category {
   background: #e2e8f0;
   color: #4a5568;
-  font-weight: normal;
 }
 
 .fav-btn {
