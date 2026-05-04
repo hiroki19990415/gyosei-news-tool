@@ -10,6 +10,12 @@ if errorlevel 1 (
   exit /b 1
 )
 
+call npm run build
+if errorlevel 1 (
+  echo [エラー] ビルドに失敗しました
+  exit /b 1
+)
+
 call surge dist zyouhou-shougai.surge.sh
 if errorlevel 1 (
   echo [エラー] 公開に失敗しました

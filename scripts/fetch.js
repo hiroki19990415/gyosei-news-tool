@@ -26,7 +26,11 @@ function parseJapaneseDate(str) {
   // 西暦: 2026-05-03, 2026.05.03, 2026/05/03, 2026年5月3日
   let m = str.match(/(\d{4})[-./年](\d{1,2})[-./月](\d{1,2})/);
   if (m) {
-    return `${m[1]}-${String(m[2]).padStart(2, '0')}-${String(m[3]).padStart(2, '0')}`;
+    const mo = parseInt(m[2]), dy = parseInt(m[3]);
+    // 電話番号（例: 0743-74-1111）や無効な月日を除外
+    if (mo >= 1 && mo <= 12 && dy >= 1 && dy <= 31) {
+      return `${m[1]}-${String(mo).padStart(2, '0')}-${String(dy).padStart(2, '0')}`;
+    }
   }
 
   // 令和: 令和8年5月3日
@@ -41,6 +45,18 @@ function parseJapaneseDate(str) {
   if (m) {
     const year = 1988 + parseInt(m[1]);
     return `${year}-${String(m[2]).padStart(2, '0')}-${String(m[3]).padStart(2, '0')}`;
+  }
+
+  // 令和N年度 / 平成N年度 → その年度の4月1日（概算）
+  m = str.match(/令和(\d+)年度/);
+  if (m) {
+    const year = 2018 + parseInt(m[1]);
+    return `${year}-04-01`;
+  }
+  m = str.match(/平成(\d+)年度/);
+  if (m) {
+    const year = 1988 + parseInt(m[1]);
+    return `${year}-04-01`;
   }
 
   return null;
@@ -252,8 +268,6 @@ function extractArticlesFromHTML(html, baseUrl, sourceName, category) {
     tryAdd(title, dateText, linkEl.attr('href') || '');
   });
 
-  if (articles.length > 0) return articles;
-
   // パターン2: dl > dt(日付) + dd(タイトル+リンク)
   $('dl').each((_, dl) => {
     const dts = $(dl).find('dt');
@@ -266,8 +280,6 @@ function extractArticlesFromHTML(html, baseUrl, sourceName, category) {
     });
   });
 
-  if (articles.length > 0) return articles;
-
   // パターン3: ul/ol の li（日付テキスト + リンク）
   $('ul li, ol li').each((_, li) => {
     const linkEl = $(li).find('a').first();
@@ -275,8 +287,6 @@ function extractArticlesFromHTML(html, baseUrl, sourceName, category) {
     const liText = $(li).text();
     tryAdd(title, liText, linkEl.attr('href') || '');
   });
-
-  if (articles.length > 0) return articles;
 
   // パターン4: リンクの隣に日付テキストがある構造
   $('a').each((_, a) => {
@@ -302,26 +312,6 @@ const SOURCES = [
     type: 'mhlw',
   },
   {
-    name: '厚労省 障害福祉通知・事務連絡',
-    url: 'https://www.mhlw.go.jp/seisakunitsuite/bunya/hukushi_kaigo/shougaishahukushi/kaisei/tuuchi.html',
-    baseUrl: 'https://www.mhlw.go.jp',
-    category: '障害福祉制度・報酬・通知',
-    type: 'mhlw',
-  },
-  {
-    name: '厚労省 障害者虐待防止関係通知',
-    url: 'https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/hukushi_kaigo/shougaishahukushi/gyakutaiboushi/tsuuchi.html',
-    baseUrl: 'https://www.mhlw.go.jp',
-    category: '障害福祉制度・報酬・通知',
-    type: 'mhlw',
-  },
-  {
-    name: 'こども家庭庁 通知・事務連絡',
-    url: 'https://www.cfa.go.jp/laws/tuuchi',
-    baseUrl: 'https://www.cfa.go.jp',
-    category: '障害福祉制度・報酬・通知',
-  },
-  {
     name: 'こども家庭庁 障害児支援',
     url: 'https://www.cfa.go.jp/policies/shougaijishien',
     baseUrl: 'https://www.cfa.go.jp',
@@ -341,8 +331,9 @@ const SOURCES = [
     category: '奈良県内自治体ニュース',
   },
   {
-    name: '生駒市',
-    url: 'https://www.city.ikoma.lg.jp/',
+    // 障がい福祉カテゴリページ（category/25-4）に更新
+    name: '生駒市 障がい福祉',
+    url: 'https://www.city.ikoma.lg.jp/category/25-4-0-0-0-0-0-0-0-0.html',
     baseUrl: 'https://www.city.ikoma.lg.jp',
     category: '奈良県内自治体ニュース',
   },
@@ -372,9 +363,10 @@ const SOURCES = [
     category: '奈良県内自治体ニュース',
   },
   {
-    name: '王寺町 子育て・福祉',
-    url: 'https://www.town.oji.nara.jp/category/4.html',
-    baseUrl: 'https://www.town.oji.nara.jp',
+    // 404になったcategory/4.htmlから障がい福祉ページに変更
+    name: '王寺町 障がい・福祉',
+    url: 'http://www.town.oji.nara.jp/kenko_fukushi_kaigo/shogaishafukushi/index.html',
+    baseUrl: 'http://www.town.oji.nara.jp',
     category: '奈良県内自治体ニュース',
   },
 ];
