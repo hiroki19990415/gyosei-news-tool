@@ -202,6 +202,15 @@ function isNavTitle(title) {
   return NAV_KEYWORDS.some((kw) => title.trim() === kw || title.trim().startsWith(kw));
 }
 
+// 「日付のみの行」かどうかを厳密に判定する（年度形式は含めない）
+// extractMhlwArticles のタイトル候補選別に使用
+function isStrictDateLine(str) {
+  const s = (str || '').trim().replace(/\s+/g, '');
+  return /^\d{4}[年\/\-\.]\d{1,2}[月\/\-\.]\d{1,2}/.test(s)
+    || /^(令和|平成)\d+年\d{1,2}月\d{1,2}日/.test(s)
+    || /^R\d+\.\d+\.\d+/.test(s);
+}
+
 function extractMhlwArticles(html, baseUrl, sourceName, category) {
   const $ = cheerioLoad(html);
   const articles = [];
@@ -224,11 +233,11 @@ function extractMhlwArticles(html, baseUrl, sourceName, category) {
     if (!date) return;
     if (new Date(date) < DATE_CUTOFF) return;
 
-    // タイトルは「日付でない・8文字以上・ナビでない」行を探す
-    const title = lines.find((l) => {
-      const d = parseJapaneseDate(l);
-      return !d && l.length >= 8 && !isNavTitle(l);
-    });
+    // タイトル候補を選ぶ：
+    //  優先: 日付のみ行でなく、8文字以上、ナビでない行
+    //  次善: 日付開始のタイトル行（「令和8年5月1日付人事異動情報」等）も許容
+    const title = lines.find((l) => !isStrictDateLine(l) && l.length >= 8 && !isNavTitle(l))
+      || lines.find((l) => l.length >= 8 && !isNavTitle(l));
     if (!title || seen.has(title)) return;
 
     seen.add(title);
@@ -308,6 +317,13 @@ const SOURCES = [
     name: '厚労省 障害福祉 新着',
     url: 'https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/hukushi_kaigo/shougaishahukushi/index.html',
     baseUrl: 'https://www.mhlw.go.jp',
+    category: '障害福祉制度・報酬・通知',
+    type: 'mhlw',
+  },
+  {
+    name: 'こども家庭庁 新着情報',
+    url: 'https://www.cfa.go.jp/news',
+    baseUrl: 'https://www.cfa.go.jp',
     category: '障害福祉制度・報酬・通知',
     type: 'mhlw',
   },
