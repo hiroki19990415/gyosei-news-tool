@@ -3,7 +3,6 @@ import { sampleArticles } from './data/sampleData';
 import { getFavorites, isWithinDays } from './utils/storage';
 import GeoSection from './components/GeoSection';
 import FavoritesSection from './components/FavoritesSection';
-import ChatGPTSummary from './components/ChatGPTSummary';
 import './App.css';
 
 // 関連性の高い記事かどうかを判定するキーワード
@@ -163,7 +162,6 @@ export default function App() {
           onFavoriteChange={refreshFavorites}
         />
         <FavoritesSection favorites={favorites} onFavoriteChange={refreshFavorites} />
-        <ChatGPTSummary articles={articles} />
       </main>
 
       <footer className="app-footer">
