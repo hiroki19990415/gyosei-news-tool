@@ -2,6 +2,7 @@
 // 実行方法: npm run fetch
 
 import { load as cheerioLoad } from 'cheerio';
+import Parser from 'rss-parser';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -140,6 +141,49 @@ function assignTags(title, sourceName) {
     if (rule.keywords.some((kw) => text.includes(kw))) tags.add(rule.tag);
   }
   return Array.from(tags);
+}
+
+// ============================================================
+// RSSフィードから記事を取得する
+// ============================================================
+const rssParser = new Parser({
+  timeout: FETCH_TIMEOUT_MS,
+  headers: {
+    'User-Agent': 'Mozilla/5.0 (compatible; GyoseiNewsBot/1.0)',
+    'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+  },
+  customFields: {
+    item: [['dc:date', 'dcDate']],
+  },
+});
+
+async function fetchRssArticles(source) {
+  const feed = await rssParser.parseURL(source.url);
+  const articles = [];
+  const seen = new Set();
+
+  for (const item of feed.items) {
+    const title = (item.title || '').trim();
+    if (!title || title.length < 8 || seen.has(title)) continue;
+
+    // pubDate または dc:date から日付取得
+    const rawDate = item.pubDate || item.dcDate || item.isoDate || '';
+    let date = null;
+    if (rawDate) {
+      try {
+        date = new Date(rawDate).toISOString().slice(0, 10);
+      } catch {
+        date = parseJapaneseDate(rawDate);
+      }
+    }
+    if (!date) continue;
+    if (new Date(date) < DATE_CUTOFF) continue;
+
+    seen.add(title);
+    articles.push(makeArticle(title, date, item.link || source.url, source.baseUrl, source.name, source.category));
+  }
+
+  return articles;
 }
 
 // ============================================================
@@ -312,6 +356,21 @@ function extractArticlesFromHTML(html, baseUrl, sourceName, category) {
 // 情報源の定義（優先順に記述）
 // ============================================================
 const SOURCES = [
+  // ===== RSS フィード（安定・確実） =====
+  {
+    name: '厚労省 新着情報',
+    url: 'https://www.mhlw.go.jp/stf/news.rdf',
+    baseUrl: 'https://www.mhlw.go.jp',
+    category: '障害福祉制度・報酬・通知',
+    type: 'rss',
+  },
+  {
+    name: '厚労省 緊急情報',
+    url: 'https://www.mhlw.go.jp/stf/kinkyu.rdf',
+    baseUrl: 'https://www.mhlw.go.jp',
+    category: '障害福祉制度・報酬・通知',
+    type: 'rss',
+  },
   // ===== 第1優先：制度・通知系 =====
   {
     name: '厚労省 障害福祉 新着',
@@ -347,7 +406,6 @@ const SOURCES = [
     category: '奈良県内自治体ニュース',
   },
   {
-    // 障がい福祉カテゴリページ（category/25-4）に更新
     name: '生駒市 障がい福祉',
     url: 'https://www.city.ikoma.lg.jp/category/25-4-0-0-0-0-0-0-0-0.html',
     baseUrl: 'https://www.city.ikoma.lg.jp',
@@ -371,7 +429,6 @@ const SOURCES = [
     baseUrl: 'https://www.city.kashihara.nara.jp',
     category: '奈良県内自治体ニュース',
   },
-  // ===== 第3優先 =====
   {
     name: '大和郡山市 障害福祉',
     url: 'https://www.city.yamatokoriyama.lg.jp/soshiki/syougaihukushika/syougaihukushi/shogaifukushi/news_shougai/index.html',
@@ -379,10 +436,34 @@ const SOURCES = [
     category: '奈良県内自治体ニュース',
   },
   {
-    // 404になったcategory/4.htmlから障がい福祉ページに変更
     name: '王寺町 障がい・福祉',
     url: 'http://www.town.oji.nara.jp/kenko_fukushi_kaigo/shogaishafukushi/index.html',
     baseUrl: 'http://www.town.oji.nara.jp',
+    category: '奈良県内自治体ニュース',
+  },
+  // ===== 追加：奈良県内自治体 =====
+  {
+    name: '桜井市 障がい福祉',
+    url: 'https://www.city.sakurai.lg.jp/sosiki/hukushihokenbu/syakaihukushika/index.html',
+    baseUrl: 'https://www.city.sakurai.lg.jp',
+    category: '奈良県内自治体ニュース',
+  },
+  {
+    name: '五條市 障がい者福祉',
+    url: 'https://www.city.gojo.lg.jp/kenkou_fukushi/fukushi/2/index.html',
+    baseUrl: 'https://www.city.gojo.lg.jp',
+    category: '奈良県内自治体ニュース',
+  },
+  {
+    name: '葛城市 障がい者福祉',
+    url: 'https://www.city.katsuragi.nara.jp/iryo_kaigo_fukushi/4/index.html',
+    baseUrl: 'https://www.city.katsuragi.nara.jp',
+    category: '奈良県内自治体ニュース',
+  },
+  {
+    name: '宇陀市 障がい福祉',
+    url: 'http://www.city.uda.nara.jp/life/3/21/94/',
+    baseUrl: 'http://www.city.uda.nara.jp',
     category: '奈良県内自治体ニュース',
   },
 ];
@@ -392,12 +473,16 @@ const SOURCES = [
 // ============================================================
 async function fetchSource(source) {
   console.log(`  取得中: ${source.name}`);
-  const html = await fetchWithTimeout(source.url);
   let articles;
-  if (source.type === 'mhlw') {
-    articles = extractMhlwArticles(html, source.baseUrl, source.name, source.category);
+  if (source.type === 'rss') {
+    articles = await fetchRssArticles(source);
   } else {
-    articles = extractArticlesFromHTML(html, source.baseUrl, source.name, source.category);
+    const html = await fetchWithTimeout(source.url);
+    if (source.type === 'mhlw') {
+      articles = extractMhlwArticles(html, source.baseUrl, source.name, source.category);
+    } else {
+      articles = extractArticlesFromHTML(html, source.baseUrl, source.name, source.category);
+    }
   }
   console.log(`  → ${articles.length}件取得`);
   return articles;
